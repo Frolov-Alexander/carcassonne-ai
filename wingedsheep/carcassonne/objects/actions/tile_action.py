@@ -8,3 +8,6 @@ class TileAction(Action):
         self.tile = tile
         self.coordinate = coordinate
         self.tile_rotations = tile_rotations
+
+    def __repr__(self):
+        return f"TileAction(tile={type(self.tile)}, coordinate={self.coordinate}, tile_rotations={self.tile_rotations})"
