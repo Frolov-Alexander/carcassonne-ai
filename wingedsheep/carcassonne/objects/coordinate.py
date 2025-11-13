@@ -12,3 +12,6 @@ class Coordinate:
 
     def __repr__(self):
         return f"({self.row}, {self.column})"
+    
+    def __str__(self):
+        return str((self.row, self.column))
