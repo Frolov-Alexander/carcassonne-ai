@@ -7,6 +7,7 @@ from wingedsheep.carcassonne.utils.action_util import ActionUtil
 from wingedsheep.carcassonne.utils.state_updater import StateUpdater
 
 from typing import Dict, Tuple
+from tqdm import tqdm
 
 import random
 import math
@@ -27,7 +28,6 @@ class MCTSNode:
         return ActionUtil.get_possible_actions(self.state)
 
     def select_expand(self):
-        explore = random.random() < self.exploration_rate
         # Generate possible action pairs
         action_pairs = []
         # Tile action
@@ -65,6 +65,8 @@ class MCTSNode:
                 curr_max_q = q
                 selected_path = action_pair
 
+        o1 = selected_path
+        o2 = list(self.children.keys())[0] if self.children else None
         if selected_path not in self.children:
             # Gen new node
             tile_action, meeple_action = selected_path
@@ -80,11 +82,16 @@ class MCTSNode:
 
     def rollout(self):
         current_state = copy.deepcopy(self.state)
+        pbar = tqdm(total=len(current_state.deck), desc="Processing items")
+        count = len(current_state.deck)
         while not current_state.is_terminated():
             # print(f"Remaining tiles: {len(current_state.deck)}")
             possible_actions = ActionUtil.get_possible_actions(current_state)
             action = random.choice(possible_actions)
             current_state = StateUpdater.apply_action(current_state, action, need_copy=False)
+            count -= 1
+            pbar.update(1)
+        pbar.close()
         return current_state
 
     def update(self, win: bool, result: int):
