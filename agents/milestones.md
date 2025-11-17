@@ -87,16 +87,18 @@ From here, shapes begin to get complicated.
 ---
 **Model**:  
 # version 3
+$T$ is the total set of tiles
+
 At each state $x_s,\ \forall s, 0≤s≤72$:  
-Let $B_s$ be the set of tiles on the board.  
-Let $T_s$ be the set of remaining tiles.  
+Let $B_s$ be the set of tiles currently placed on the board.  
+Let $T_s$ be the set of remaining tiles ($T_s=T-B_s$).  
 Let $i,j$ indicate row and column indices respectively ($\forall i,j: 1≤i,j≤72$).  
 <!-- Let $l,w$ indicate board length and width respectively. -->
 
 **Board Model**  
 Max row or column-length of a Carcassonne board would be 72.  
 This is a certain overestimate, due to the inclusion of tiles with bending features (eg. a tile with a road connecting west and north), but the area coverage as of $s_{72}$ will always be 72 tiles.
-Therefore, lets represent board $B_s$ as a 72x72 matrix:
+Therefore, lets represent board $B_s$ as a 72x72 matrix, initialized to 0s (representing no tile placement):
 $$
 B=
 \begin{bmatrix}
@@ -105,23 +107,34 @@ B=
     \vdots & \vdots & \vdots & \ddots & \vdots \\
     t_{72,1} & t_{72,2} & t_{72,3} & \dots  & t_{72,72}
 \end{bmatrix}
+=
+\begin{bmatrix}
+    0 & 0 & 0 & \dots  & 0 \\
+    0 & 0 & 0 & \dots  & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & 0 & \dots  & 0
+\end{bmatrix}
 $$
 
 **Tile Model**  
-At state $x_s$, each tile $t_{ij}\in B_s$ is a square matrix (where each $e$ represents an edge of tile $t$):
+We enumerate the directions of each tile $t_{ij}\in B_s$ as a square matrix (where each $e_{direction}$ represents an edge of tile $t$):
 $$
-t_s = 
+t_{ij} = 
 \begin{bmatrix}
    e_{west} & e_{north}\\
    e_{south} & e_{east}\\
 \end{bmatrix}
 =
 \begin{bmatrix}
-   e_{00} & e_{01} \\
-   e_{10} & e_{11} \\
+   00 & 01 \\
+   10 & 11 \\
 \end{bmatrix}
-
 $$
+
+
+
+### Branching Factor
+Considering meeples further increase branching factor; Each action may optional include the usage of a meeple
 
 
 
@@ -210,3 +223,11 @@ A Lower limit can be computed by estimating the number of board shapes:
 - test-run the training, make sure it works.
 
 #### State Space Implementation:
+
+
+
+
+
+---
+## Sources:
+https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html
