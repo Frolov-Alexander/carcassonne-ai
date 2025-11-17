@@ -283,5 +283,9 @@ A Lower limit can be computed by estimating the number of board shapes:
 
 ---
 ## Sources:
+Carcassonne Implementation
 [1] https://wingedsheep.com/programming-carcassonne/
+
+polyominoes
 [2] https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html
+[3] https://epubs.siam.org/doi/10.1137/1.9781611977929.10
