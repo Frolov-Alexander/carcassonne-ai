@@ -102,9 +102,12 @@ $$
 
 At each step $s$:  
 $x_s$:  
-- Player draws and places tile $t_s$
+- Player draws tile $t_s$
 - The set of remaining tiles $P_s=\{t_{s+1},...,t_{72}\}$ 
 - The current board $B_s=\{t_0,t_1,...,t_s\}$
+
+Action $a_s$:
+- Player will place tile $t_s$ in $B$
 
 ---
 
