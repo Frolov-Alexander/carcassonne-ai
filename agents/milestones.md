@@ -27,11 +27,8 @@ Carcassone is a turn-based tile-placement game. Though the game allows for 2-5 p
 ---
 ## Milestone 1 (Nov 16): 
 
-#### Per Proposal:
-- Setting up the environment/game engine
-- implementing API to interact with the game engine for later use in training
+### State Space:
 
-# State Space:
 #### Version 4
 The state space for Carcassonne is the set of unique boards and meeple placements that can be generated over the course of the game.  
 *_Note:  
@@ -62,6 +59,9 @@ B=
 $$
 and let $|B|$ be the set of tiles currently in $B$
 
+---
+Policy $\pi(x_s,a_s)$:
+- f
 
 
 ---
@@ -85,10 +85,10 @@ a_{ij} =
 \end{cases}
 $$
  -->
-Step $s=0$ is the initial game state.  
+Step $s=0$ (initial state).  
 $x_0$:
-- The set of remaining tiles $P_0=\{t_1,t_1,t_2,...,t_{72}\}$ 
-- so $|B_0|=\{\}$, and
+- $P_0=P$ 
+- $B_0$ is an empty board; ie. 
 $$
 B_0=
 \begin{bmatrix}
@@ -96,18 +96,20 @@ B_0=
     0 & 0 & 0 & \dots  & 0 \\
     \vdots & \vdots & \vdots & \ddots & \vdots \\
     0 & 0 & 0 & \dots  & 0 \\
-\end{bmatrix}
+\end{bmatrix},\ \ 
+|B_0|=\{\}
 $$
   
 
 At each step $s$:  
 $x_s$:  
-- Player draws tile $t_s$
-- The set of remaining tiles $P_s=\{t_{s+1},...,t_{72}\}$ 
-- The current board $B_s=\{t_1,t_2,...,t_s\}$
+- $t_s \leftarrow P_s$  (Player draws tile from pile)
+- Set of remaining pile $P_s=\{t_{s+1},...,t_{72}\}$ 
 
-Action $a_s$:
-- Player will place tile $t_s$ in $B$
+Agent takes action $a_s$:
+- Phase 1:
+    - The current board $B_s=\{t_1,t_2,...,t_s\}$
+    - Player will place tile $t_s\rightarrow B_{s-1}$ at some $b_{ij}$ (per policy $\pi$)
 
 ---
 
