@@ -32,8 +32,9 @@ Carcassone is a turn-based tile-placement game. Though the game allows for 2-5 p
 - implementing API to interact with the game engine for later use in training
 
 #### State Space Description:
-The state space for Carcassonne is the set of unique boards that can be formed over the course of the game. 
-This is difficult to compute exactly due to a number of factors, but especially the variety of board shapes and placement restrictions, which results in a very large discrete state space.   
+The state space for Carcassonne is the set of unique boards and meeple placements that can be generated over the course of the game.
+
+This is very difficult to compute the number of board configurations precisely due to a number of factors, but especially the variety of board shapes and placement restrictions, which results in a massive discrete state space.   
 
 - After the starting tile $t_0$, each tile $t_s$ is drawn randomly from a non-uniformly distributed set $T=\{t_1,t_2,...,t_{71}\}$. 
 - Tile placement is constrainted since each placed tile must "continue the landscape", which is dependent on:
@@ -48,7 +49,7 @@ This is difficult to compute exactly due to a number of factors, but especially 
 According to this [thesis](https://project.dke.maastrichtuniversity.nl/games/files/msc/MasterThesisCarcassonne.pdf), a lower bound on the state space can be calculated based on unique board shapes (called polyominoes), at $\approx 3\cdot10^{41}$
 
 
-We compute boad shapes for each n tiles on the board, where $1 ≤ s ≤ |T|=72$.  
+We compute board shapes for each n tiles on the board, where $1 ≤ s ≤ |T|=72$.  
 We consider mirrored or rotated polyominoes to be the same board state
 
 
@@ -86,34 +87,43 @@ From here, shapes begin to get complicated.
 ---
 **Model**:  
 # version 3
-At each state $x_s,\ \forall x, 0≤x≤72$:  
-Let $B_s$ be the set of tiles on the board  
-Let $T_s$ be the set of remaining tiles  
-Let $i,j$ indicate row and column indices respectively.  
-Let $l,w$ indicate board length and width respectively.
-
-**Tile Model**  
-At state $x_s$, each tile $t_{ij}\in B_s$ is a square matrix:
-$$
-t_s = 
-\left[
-\begin{matrix}
-   e_{west} & e_{north} \cr
-   e_{south} & e_{east} \cr
-\end{matrix}
-\right]
-=
-\left[
-\begin{matrix}
-   e_{00} & e_{01} \cr
-   e_{10} & e_{11} \cr
-\end{matrix}
-\right]
-$$
+At each state $x_s,\ \forall s, 0≤s≤72$:  
+Let $B_s$ be the set of tiles on the board.  
+Let $T_s$ be the set of remaining tiles.  
+Let $i,j$ indicate row and column indices respectively ($\forall i,j: 1≤i,j≤72$).  
+<!-- Let $l,w$ indicate board length and width respectively. -->
 
 **Board Model**  
 Max row or column-length of a Carcassonne board would be 72.  
-This is a certain overestimate, due to the inclusion of tiles with bending features (eg. a tile with a road connecting west and north), but the area coverage as of $s_{72}$ will always be 72 tiles:
+This is a certain overestimate, due to the inclusion of tiles with bending features (eg. a tile with a road connecting west and north), but the area coverage as of $s_{72}$ will always be 72 tiles.
+Therefore, lets represent board $B_s$ as a 72x72 matrix:
+$$
+B=
+\begin{bmatrix}
+    t_{1,1} & t_{1,2} & t_{1,3} & \dots  & t_{1,72} \\
+    t_{2,1} & t_{2,2} & t_{2,3} & \dots  & t_{2,72} \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    t_{72,1} & t_{72,2} & t_{72,3} & \dots  & t_{72,72}
+\end{bmatrix}
+$$
+
+**Tile Model**  
+At state $x_s$, each tile $t_{ij}\in B_s$ is a square matrix (where each $e$ represents an edge of tile $t$):
+$$
+t_s = 
+\begin{bmatrix}
+   e_{west} & e_{north}\\
+   e_{south} & e_{east}\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+   e_{00} & e_{01} \\
+   e_{10} & e_{11} \\
+\end{bmatrix}
+
+$$
+
+
 
 
 <!-- # version 2
