@@ -31,65 +31,110 @@ Carcassone is a turn-based tile-placement game. Though the game allows for 2-5 p
 - Setting up the environment/game engine
 - implementing API to interact with the game engine for later use in training
 
-#### State Space Description:
-The state space for Carcassonne is the set of unique boards and meeple placements that can be generated over the course of the game.
+# State Space:
+#### Version 4
+The state space for Carcassonne is the set of unique boards and meeple placements that can be generated over the course of the game.  
 
-This is very difficult to compute the number of board configurations precisely due to a number of factors, but especially the variety of board shapes and placement restrictions, which results in a massive discrete state space.   
+- Pile of undrawn tiles $t\in$ pile $P=\{t_0,t_2,...,t_{71}\}$ is non-uniformly distributed.  
+- For Board $B$
+    - Let Board $B$ be a 30x30 matrix*
+    - Let $i,j$ be indices such that $\forall i,j: 1 ≤ i,j ≤ 30$*  
+    - For each $b_{ij}\in B$:
+$$
+b_{ij} = 
+\begin{cases} 
+    0 & \text{if no tile at position }i,j \\
+    t_{s} & \text{if tile $t_s$ at position }i,j \\
+\end{cases}
+$$  
+ie. Board B is:
+$$
+B=
+\begin{bmatrix}
+    b_{1,1} & b_{1,2} & b_{1,3} & \dots  & b_{1,30} \\
+    b_{2,1} & b_{2,2} & b_{2,3} & \dots  & b_{2,30} \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    b_{30,1} & b_{30,2} & b_{30,3} & \dots  & b_{30,30}
+\end{bmatrix}
+$$
+and let $|B|$ be the set of tiles currently in $B$
 
-- After the starting tile $t_0$, each tile $t_s$ is drawn randomly from a non-uniformly distributed set $T=\{t_1,t_2,...,t_{71}\}$. 
-- Tile placement is constrainted since each placed tile must "continue the landscape", which is dependent on:
-    - the current board's shape
-    - its current open sides/features
-    - the current tile to be placed
-- Meeple placement is dependent on:
-    - the current placed tile
-    - previous meeple placements
+*_(limited by wingedsheep's game implementation [1])_   
 
-
-According to this [thesis](https://project.dke.maastrichtuniversity.nl/games/files/msc/MasterThesisCarcassonne.pdf), a lower bound on the state space can be calculated based on unique board shapes (called polyominoes), at $\approx 3\cdot10^{41}$
-
-
-We compute board shapes for each n tiles on the board, where $1 ≤ s ≤ |T|=72$.  
-We consider mirrored or rotated polyominoes to be the same board state
-
-
-
-To compute the number of board shapes at each step of play:  
-
-0. $x_0$: Board starts with $t_0$ (aka $t_s$)  
-    - 1 tile placed
-    - 1 possible shape
-    - 4 open edges
-
-1. $x_1$: Tile $t_1$ is placed from remaining 71 tiles in $T$
-    - 2 tiles placed
-    - result is 1 possible shape
-    - 6 open edges
-
-2. $x_2$: Tile $t_2$ is placed from remaining 70 tiles in $T$
-    - 3 tiles placed
-    - result is 2 possible shapes (a line or corner)
-    - 8 open edges
-
-From here, shapes begin to get complicated.  
-3. $x_3$: Tile $t_3$ is placed from remaining 69 tiles in $T$
-    - 4 tiles placed
-    - results in several possible shapes:  
-        - if $s_2=Corner$, 7 possible $s_3$ shapes  
-        - if $s_2=Line$, 8 possible $s_3$ shapes  
-...  
-
-70. Tile is placed from remaining 2 tiles
-    - 71 tiles placed
-71. Tile is placed from remaining 1 tile  
-    - 72 tiles placed
 
 ---
-**Model**:  
-# version 3
+
+At each step $s$, where $0 ≤ s ≤ 72$  
+(where s=0 represents the board setup before the first action).  
+State $x_s$ at step $s$ is defined by:
+- $B_s$ is the board state at s (ie. $|B_s|=\{t_0,...,t_{s-1}\}$)
+- $P_s$ is the remaining undrawn tiles @ s (ie. $P_s = P-|B_s|$)
+- $t_s$ is the tile drawn at step $s$
+
+<!-- Commented out bc we havent really defined these...?
+- Transition matrix $T_{s}$ 
+- Action $a_s$ is a 30x30 matrix, where:
+$$
+a_{ij} = 
+\begin{cases} 
+    1 & \text{if tile $t_s$ is to be placed at position }i,j \\
+    0 & \text{otherwise} \\
+\end{cases}
+$$
+ -->
+
+(@ $x_0$) Step 0 is the initial game state:
+- $t_0$ is the starting tile, and is placed randomly on the board*
+- The set of remaining tiles $P_0=\{t_1,t_2,...,t_{71}\}$ 
+- The current board $B_0=\{t_0\}$
+
+$$
+B_0=
+\begin{bmatrix}
+    0 & 0 & 0 & \dots  & 0 \\
+    0 & 0 & 0 & \dots  & 0 \\
+    \vdots & \vdots & \vdots & t_0 & \vdots \\
+    0 & 0 & 0 & \dots  & 0
+\end{bmatrix}
+$$
+
+(@ $x_1$) Step 1 is the first action of the game:
+- Drew and placed tile $t_1$
+- The set of remaining tiles $P_1=\{t_2,...,t_{71}\}$ 
+- The current board $B_1=\{t_0,t_1\}$
+
+---
+
+
+
+<!-- idk if we need this -->
+**Tile Model**  
+We enumerate the directions of each tile $t_{ij}\in B_s$ as a square matrix (where each $e_{direction}$ represents an edge of tile $t$):
+$$
+t_{ij} = 
+\begin{bmatrix}
+   e_{west} & e_{north}\\
+   e_{south} & e_{east}\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+   00 & 01 \\
+   10 & 11 \\
+\end{bmatrix}
+$$
+
+---
+---
+---
+---
+
+
+
+**State Space**:  
+#### version 2
 $T$ is the total set of tiles
 
-At each state $x_s,\ \forall s, 0≤s≤72$:  
+At each state $x_s,\ \forall$ steps $s, 0≤s≤72$:  
 Let $B_s$ be the set of tiles currently placed on the board.  
 Let $T_s$ be the set of remaining tiles ($T_s=T-B_s$).  
 Let $i,j$ indicate row and column indices respectively ($\forall i,j: 1≤i,j≤72$).  
@@ -139,7 +184,7 @@ Considering meeples further increase branching factor; Each action may optional 
 
 
 
-<!-- # version 2
+<!-- # version 1
 At state $s$, each tile $t_s$ is defined as a square matrix:
 $$
 t_s = 
@@ -163,51 +208,60 @@ $t_{s}=e_{ij}$  -->
 
 
 
-<!-- ---
-# version 3
-**Action-Value Function**
-$$Q^π(s,a)=E^π[R_t+1+γQ^π(S_t+1,A_t+1)\ |\ S_t=s,A_t=a]$$
 
-**State Space**
-$$
-\left[
-\begin{matrix}
-   a & b \cr
-   c & d \cr
-   e & f
-\end{matrix}
-\right]
-$$
+<!-- #### Version 0
+State Space Size
+This is very difficult to compute the number of board configurations precisely due to a number of factors, but especially the variety of board shapes and placement restrictions, which results in a massive discrete state space.   
+
+- After the starting tile $t_0$, each tile $t_s$ is drawn randomly from a non-uniformly distributed set $T=\{t_1,t_2,...,t_{71}\}$. 
+- Tile placement is constrainted since each placed tile must "continue the landscape", which is dependent on:
+    - the current board's shape
+    - its current open sides/features
+    - the current tile to be placed
+- Meeple placement is dependent on:
+    - the current placed tile
+    - previous meeple placements
 
 
-**Transition Matrix**
-$$
-P=
-\left[
-\begin{matrix}
-   a & b \cr
-   c & d
-\end{matrix}
-\right]
-$$
+According to this [thesis](https://project.dke.maastrichtuniversity.nl/games/files/msc/MasterThesisCarcassonne.pdf), a lower bound on the state space can be calculated based on unique board shapes (called polyominoes), at $\approx 3\cdot10^{41}$
 
-**Transition Matrix**
-$$
-\left[
-\begin{matrix}
-   a & b \cr
-   c & d
-\end{matrix}
-\right]
-$$
 
-**Value Function**:
-$$
+We compute board shapes for each tile on the board, where $1 ≤ s ≤ |T|=72$.  
+We consider mirrored or rotated polyominoes to be the same board state
 
-$$
 
- -->
 
+To compute the number of board shapes at each step of play:  
+
+0. $x_0$: Board starts with $t_0$ (aka $t_s$)  
+    - 1 tile placed
+    - 1 possible shape
+    - 4 open edges
+
+1. $x_1$: Tile $t_1$ is placed from remaining 71 tiles in $T$
+    - 2 tiles placed
+    - result is 1 possible shape
+    - 6 open edges
+
+2. $x_2$: Tile $t_2$ is placed from remaining 70 tiles in $T$
+    - 3 tiles placed
+    - result is 2 possible shapes (a line or corner)
+    - 8 open edges
+
+From here, shapes begin to get complicated.  
+3. $x_3$: Tile $t_3$ is placed from remaining 69 tiles in $T$
+    - 4 tiles placed
+    - results in several possible shapes:  
+        - if $s_2=Corner$, 7 possible $s_3$ shapes  
+        - if $s_2=Line$, 8 possible $s_3$ shapes  
+...  
+
+70. Tile is placed from remaining 2 tiles
+    - 71 tiles placed
+71. Tile is placed from remaining 1 tile  
+    - 72 tiles placed
+
+--- -->
 
 
 A Lower limit can be computed by estimating the number of board shapes:
@@ -230,4 +284,5 @@ A Lower limit can be computed by estimating the number of board shapes:
 
 ---
 ## Sources:
-https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html
+[1] https://wingedsheep.com/programming-carcassonne/
+[2] https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html
