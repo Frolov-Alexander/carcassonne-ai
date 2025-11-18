@@ -36,6 +36,7 @@ def main():
 
     #todo: adjust to init agents based on game setup
     
+    #Q leanrning agent chnages
     #players = [QLearnAgent(i) for i in range(game.players)] 
     players = [
     QLearnAgent(0),   # your RL agent

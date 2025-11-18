@@ -1,3 +1,5 @@
+#Author: Anvay Paralikar Q_Learning agent implementation
+
 from wingedsheep.carcassonne.carcassonne_game import CarcassonneGame
 from wingedsheep.carcassonne.tile_sets.tile_sets import TileSet
 

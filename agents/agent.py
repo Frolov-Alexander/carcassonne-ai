@@ -69,6 +69,7 @@ class MCTSAgent(Agent):
         pass
 
 
+# Author: Anvay Paralikar Q_Learning agent implementation
 class QLearnAgent(Agent):
     """
     Tabular Q-learning agent.
