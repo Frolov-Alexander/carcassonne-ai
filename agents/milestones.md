@@ -87,17 +87,26 @@ t =
 $$
 When drawn, the tile may be rotated by $\theta\in\{0º,90º,180º,270º\}$, and is then placed on the board at some selected $(i,j)$
 
+---
 $\therefore$
 
 At each step $s$, where $0 ≤ s ≤ 72$  
 (where s=0 represents the board setup before the first action).  
-State $x_s$ at step $s$ is defined by:
-- Let $B_s$ be the board state at s (ie. $|B_s|=\{t_1,...,t_{s-1}\}$)
-- Let $P_s$ be the remaining undrawn tiles @ s (ie. $P_s = P-|B_s|$)
+- Let $B_s$ be the board state at step s 
+    - (ie. $|B_s|=\{t_1,...,t_{s-1}\}$)
+- Let $P_s$ be the remaining undrawn tiles at step s 
+    - (ie. $P_s = P-|B_s|$)
 - Let $t_s$ be the tile drawn at step $s$
+<!-- - Let $t_s$ be the tile drawn next from $P$ at step $s$ -->
 
+Let $X$ be the set of all possible game states.  
+State $x\in X$ at step $s$ is defined as $x_s = [B_s,P_s,t_s]$ <!-- M_s]$ to model meeples? -->
+
+
+---
 #### Initial State (ie. $s=0$):
 $x_0$:
+<!-- - $P_0=P \implies t_0 =$  -->
 - $P_0=P$ 
 - $B_0$ is an empty board; ie. 
 $$
@@ -110,6 +119,10 @@ B_0=
 \end{bmatrix},\ \ 
 |B_0|=\{\}
 $$
+- no tile drawn at $s=0$
+
+ie. $x_0 = [P, B_0, \empty]$
+<!-- ie. $x_0 = [P, B_0, t_0]$ -->
   
 #### For each step (ie. $\forall s,\ 0 < s ≤ 72$):
 $x_s$:  
