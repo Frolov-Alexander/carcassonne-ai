@@ -99,6 +99,7 @@ class QLearnAgent(Agent):
     # ---------- helpers to encode state / action ----------
 
     def _encode_state(self, game: CarcassonneGame) -> tuple:
+        # TODO: convert to a __hash__(self)
         """Turn the big game state into a compact, hashable key."""
         state = game.state
 
@@ -144,6 +145,8 @@ class QLearnAgent(Agent):
         return (tile_name, score_bucket, meeples_left, phase_name)
 
     def _encode_action(self, action: Action) -> str:
+        # TODO: convert to a __hash__(self)
+        # TODO: might no be necessary if you just need a hashable object
         # repr() is stable and already used in printing
         return repr(action)
 
