@@ -40,7 +40,7 @@ limitations  that differ from the original game [1]
 
 ---
 ### Game Setup
-- Players $P_1,P_2$, each with a supply of 7 meeples
+- Players $A_0,A_1$, each with a supply of 7 meeples
 - A set of 72 landscape tiles $\mathcal{T}$
 - An empty 30x30* board $B$
 
@@ -54,48 +54,42 @@ Each landscape tile $t\in\mathcal{T}$ is a square with:
 - five meeple positions
     - the four edges and 'center' ('center' represented by 'c')
     - $P=E +\{c\}$
-- each position $\in P$ displays a feature:
-    - Edge features include: 
+- each position $p\in P$ displays a feature:
+    - Edge feature types include: 
         - {grass, city, road}  
         - enumerated as $f_1,f_2,f_3$
-    - Other features include:  
+    - Other feature types include:
         - {village, monastery, garden, farmhouse, cowshed, watertower, highwaymen, pigsty, stables}
         - (enumerated as $f_4,...,f_{12}$)
-    - $\mathcal{F}_x$ denotes the features available to x
-    - $\mathcal{F}_E \in \{f_1,f_2,f_3\}$
-    - $\mathcal{F}_P \in \{f_1,f_2,...,f_{12}\}$   <!-- ! double check -->
+    - in other words:
+        - $\mathcal{F}_x$ denotes the features available to $x$
+        - $\mathcal{F}_E \in \{f_1,f_2,f_3\}$
+        - $\mathcal{F}_P \in \mathcal{F}_E+\{f_4...,f_{12}\}$   <!-- ! double check -->
 
-There are 24 unique tiles types
+There are 24 unique tile types. Across all games (restrited to the base game),  
+tile types are constant, consistent, and non-uniformly distributed amongst the 72 tiles.
 
-The 72 tiles $t\in\mathcal{T}$ are non-uniformly distributed.  
+<!-- Tile placement on the board is constrained:
+- all adjacent edges must have matching features
+-  -->
+
+Each tile, when drawn, may be rotated.
+
+Let $D$ be a queue of undrawn tiles  
+$D$ will be referred to as the 'pile' or 'deck'.  
+$D$ has methods:
+- $push()$: to enqueu a tile 
+- $pop()$: to dequeue a tile
+- $top()$: to view top of stack
+
+$\forall t\in\mathcal{T}$ are pushed onto $D$ in a random order.  
+$t\in D=\{t_1,t_2,...,t_{72}\}$ where $t_s$ is the tile drawn at step $s$.  
+
 
 ---
-
-
-Each Landscape Tile $t\in D$ is a square with:
-- four edges, each side of the square:
-    - $\{n,s,e,w\}$ (ie. north, south, east, west)
-- five subfeature (meeple) locations, the four edges and the center:
-    - $\{n,s,e,w,c\}$ (ie. north, south, east, west, center)
-
-The base game tiles have _ possible features:
-
-Each edge must be placed adjacent to 
- that may contain up to 5 
- contains a feature type.  
-We will enumerate the four edges as relative north, south, east, and west.  
-ie. Tile $t$'s edges can be represented as an enumeration:
-<!-- todo: enumerate feature types, so can define Pr[e = f and e=e' | x_{s-1}] or smth? -->
-
-
-Let $D$ be a stack of undrawn tiles $t$ ($D$ will be referred to as the 'pile' or 'deck').  
-$\forall t\in\mathcal{T}$ are pushed onto stack $D$ in a random order.  
-$t\in D=\{t_1,t_2,...,t_{72}\}$ is non-uniformly distributed.  
-
----
-##### Board
-Let $B$ represent the Board state:
-- Let Board $B$ be a 30x30 matrix*
+### Board State
+Let $B$ represent the Board:
+- $B$ is a 30x30 matrix
 - Let $i,j$ be indices such that $\forall i,j: 1 ≤ i,j ≤ 30$*  
 - For each $b_{i,j}\in B$:
 $$
@@ -115,50 +109,32 @@ B=
     b_{30,1} & b_{30,2} & b_{30,3} & \dots  & b_{30,30}
 \end{bmatrix}
 $$
-Let $|B|$ be the set of tiles currently in $B$
+Let $tiles(B)$ return the set of tiles currently in $B$  
+Let $meeples(B)$ return the set of meeples currently in $B$  
+
 
 ---
-
-$$
-t = 
-\left[
-\begin{matrix}
-   e_{west} & e_{north} \cr
-   e_{south} & e_{east} \cr
-\end{matrix}
-\right]
-=
-\left[
-\begin{matrix}
-   00 & 01 \cr
-   10 & 11 \cr
-\end{matrix}
-\right]
-$$
-When drawn, the tile may be rotated by $\theta\in\{0º,90º,180º,270º\}$, then placed on the board $B$ at some selected $(i,j)$
-
----
-$\therefore$
-
+### Time Step
 At each step $s$, where $0 ≤ s ≤ 72$  
-(where s=0 represents the board setup before the first action).  
+(where s=0 represents the initial board state before the first action).  
+
 - Let $B_s$ be the board state at step s 
-    - (ie. $|B_s|=\{t_1,...,t_{s-1}\}$)
-- Let $P_s$ be the remaining undrawn tiles
-    - (ie. $P_s = D-|B_s|$)
+    - ie. $tiles(B_s)=\{t_1,...,t_{s-1}\}$
+- Let $D_s$ be the remaining undrawn tiles
+    - ie. $D_s = D-tiles(B_s)$
+    - $\therefore D_s = [t_{s},...,t_{72}]$
 - Let $t_s$ be the next tile drawn
-    - (ie. $t_s=D.top()$)
+    - ie. $t_s=D.top()$
 <!-- - Let $t_s$ be the tile drawn next from $D$ at step $s$ -->
 
 Let $X$ be the set of all possible game states.  
-State $x\in X$ at step $s$ is defined as $x_s = [B_s,P_s,t_s]$ <!-- M_s]$ to model meeples? -->
-
+State $x\in X$ at step $s$ is defined as $x_s = [B_s,D_s,t_s]$ <!-- M_s]$ to model meeples? -->
 
 ---
 #### Initial State (ie. $s=0$):
 $x_0$:
 <!-- - $P_0=D \implies t_0 =$  -->
-- $P_0=D$ 
+- $D_0=D$ 
 - $B_0$ is an empty board; ie. 
 $$
 B_0=
@@ -168,20 +144,52 @@ B_0=
     \vdots & \vdots & \vdots & \ddots & \vdots \\
     0 & 0 & 0 & \dots  & 0 \\
 \end{bmatrix},\ \ 
-|B_0|=\{\}
+tiles(B_0)=\{\}
 $$
 - no tile drawn at $s=0$
 
 ie. $x_0 = [D, B_0, \empty]$
 <!-- ie. $x_0 = [D, B_0, t_0]$ -->
   
-#### For each step (ie. $\forall s,\ 0 < s ≤ 72$):
+---
+#### Helper Functions
+For board $B$, 
+drawn tile $t$,  
+tile rotation $\theta\in\{0º, 90º, 180º, 270º\}$  
+and position (x,y) where $b_{x,y}\in B$ and $b_{x,y}=0$
+
+Let function $is\_valid\_placement(B,t,\theta,(x,y))$ return true if:
+- tile $t$ rotated by $\theta$ and placed at $b_{x,y}\in B$
+- $\forall$ tiles $b'\in J=\{b_{x+1,y},b_{x-1,y},b_{x,y+1},b_{x,y-1} | b_{i,j} ≠ 0\}$ (adjacent board positions containing tiles)
+    - $matching\_features(b',b_{x,y})$ is True
+- adjacent to $b_{x,y}$, the adjacent edges have the same feature type
+    <!-- - if $\forall e\in t_E$, and $\forall e'\in j, \forall j \in J$ where $J$ is the set of tiles  -->
+
+
+For $b_1,b_2\in B$,  
+Let function $matching\_features(b_1,b_2)$ return true if:
+- $\exists$ edge $e\in b_1\land e\in b_2$ (adjacent edge)
+- $\exists$ tiles $t_p$ on $b_1\land t_q$ on $b_2$ (there are tiles $t_p$ and $t_q$ on positions $b_1$ and $b_2$)
+- and $t_p.e.f = t_q.e.f$ ($t_p$'s feature matches $t_q$'s feature on that edge)
+
+---
+
+
+
+For each step (ie. $\forall s,\ 0 < s ≤ 72$):
 $x_s$:  
-- $t_s \leftarrow P_{s-1}$  (ie. Player draws tile from pile)
+- $t_s \leftarrow P_{s-1}.pop()$  (ie. Player draws random tile from top of pile)
 - $\theta = rotate(t_s)$
 - $P_s = P_{s-1} - \{t_s\} =\{t_{s+1},...,t_{72}\}$ (ie. Set of remaining tiles in pile)
 
-Agent takes action $a_s$ which includes:
+#### Action
+<!-- Agent takes action $a_s$ which includes information for the two move phases   -->
+Let $A' = A_s\mod2$ (ie. A' denotes the current player)  
+$A_{s\% 2}$ takes action $a_s$ in two phases:
+<!-- (tile placement, meeple placement): -->
+- Phase 1:
+    - A' draws tile $t_s$
+
 - coordinates $i,j$, and orientation $\theta$ to place tile $t_s$ (ie. to set $b_{ij}=t_s$)
 - coordinates i,j and to place tile $t_s$ (ie. to set $b_{ij}=t_s$):  
 Policy $\pi(x_s,a_s)$:
@@ -190,7 +198,17 @@ Policy $\pi(x_s,a_s)$:
     - Player will place tile $t_s\rightarrow B_{s-1}$ at some $b_{ij}$ (per policy $\pi$)
 
 
+When drawn, the tile may be rotated by $\theta\in\{0º,90º,180º,270º\}$, then placed on the board $B$ at some selected $(i,j)$
 
+---
+
+
+Each edge must be placed adjacent to an edge on the board such that
+ adjacent edges share the same feature
+ contains a feature type.  
+We will enumerate the four edges as relative north, south, east, and west.  
+ie. Tile $t$'s edges can be represented as an enumeration:
+<!-- todo: enumerate feature types, so can define Pr[e = f and e=e' | x_{s-1}] or smth? -->
 
 ---
 ---
