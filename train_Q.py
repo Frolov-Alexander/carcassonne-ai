@@ -61,6 +61,10 @@ def main():
             result = "Draw"
 
         print(f"Episode {ep:3d}: scores = {scores} -> {result}")
+    
+    q_agent.save_q_table("q_table.pkl")
+    q_agent.save_q_table("q_table.pkl")
+    print("Saved trained Q-table to q_table.pkl")
 
     print("\nTraining summary vs random:")
     print(f"  Q-learning wins : {q_wins}/{num_episodes}")

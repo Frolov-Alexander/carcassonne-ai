@@ -36,6 +36,8 @@ def main():
 
     #todo: adjust to init agents based on game setup
     
+    q_agent = QLearnAgent(0, epsilon=0.0)   # no exploration when playing
+    q_agent.load_q_table("q_table.pkl")     # load the trained policy
     #Q leanrning agent chnages
     #players = [QLearnAgent(i) for i in range(game.players)] 
     players = [

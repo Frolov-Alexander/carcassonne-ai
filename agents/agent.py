@@ -11,6 +11,7 @@ We define a player agent and player state.
 """
 
 import random
+import pickle
 
 from wingedsheep.carcassonne.carcassonne_game import CarcassonneGame
 from wingedsheep.carcassonne.objects.actions.action import Action
@@ -226,3 +227,17 @@ class QLearnAgent(Agent):
         self.last_state_key = None
         self.last_action_key = None
         self.last_score = 0
+
+    def save_q_table(self, filepath: str) -> None:
+        """Save the learned Q-table to disk."""
+        with open(filepath, "wb") as f:
+            pickle.dump(self.q_table, f)
+
+    def load_q_table(self, filepath: str) -> None:
+        """Load a previously saved Q-table from disk (if it exists)."""
+        if not os.path.exists(filepath):
+            print(f"[WARN] Q-table file '{filepath}' not found. Starting fresh.")
+            return
+        with open(filepath, "rb") as f:
+            self.q_table = pickle.load(f)
+        print(f"[INFO] Loaded Q-table from '{filepath}', entries = {len(self.q_table)}") 
