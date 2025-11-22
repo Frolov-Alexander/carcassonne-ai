@@ -8,31 +8,38 @@
 ### [Link to Proposal](https://docs.google.com/document/d/1PEDPkamepkVnma3u2gy3hDgGm40ObsuCCUwDg2AMZo8/edit?usp=sharing)
 
 ### Project Setup/Run:
-Setup instructions in README.md at root level
+- Setup instructions in README.md at root level
+
 
 ---
 ---
 
 ## Game
-Carcassone is a turn-based tile-placement game. Though the game allows for 2-5 players and game expansions, we will be focusing on 2 player games with a base set of landscape tiles and non-farmer meeples.
+Carcassone is a turn-based tile-placement game.  
+Though the game allows for 2-5 players and game  
+expansions, we will be focusing on 2 player games  
+with a base set of landscape tiles and non-farmer meeples.  
 
-0. The game starts with a starting tile, $t_0$, placed on the board
-1. On each player’s turn, they will:
-- 1.1 expand the board by placing a square tile randomly drawn from a set of 71 tiles, and placing it on the existing board such that:
-    - at least one edge is in contact with a tile on the board
-    - all edges of the placed tile in contact with other tiles match in feature types
-- 1.2 The player will then optionally place a Meeple on the placed tile, if the feature does not currently have a meeple in it
-2. A game ends once all 72 tiles are placed.
+- 1: The game starts with a starting tile, $t_0$, placed on the board.
+- 2: On each player’s turn, they will:
+- 2.1: expand the board by placing a square tile randomly drawn from  
+       a set of 72 tiles, and placing it on the existing board such that:
+    - at least one edge is in contact with a tile  
+      on the board.
+    - all tiles adjacent to the newly placed tile  
+      share a feature type along shared edges.
+- 2.2: The player will then optionally place a Meeple on that tile,  
+       if the feature does not currently have a meeple on it.
+- 3: A game ends once all 72 tiles are placed.
 
 ---
 # Milestone 1 (Nov 16): 
-
-<!-- ! Trying to model how getting the next move -->
 ## State Space Model
+The state space $\mathcal{S}$ for Carcassonne is the set of unique boards (including both  
+tile and meeple placements) that can be generated over the course of the game.  
 
-The state space $\mathcal{S}$ for Carcassonne is the set of unique boards (including both tile and meeple placements) that can be generated over the course of the game.  
-
-The environment implementation generates a state consisting of the current tile to be placed, and a set of "feature planes" [1] compiled to represent:
+The environment implementation generates a state consisting of the current tile to be  
+placed, and a set of "feature planes" [1] compiled to represent:
 - the current board
 - all tiles currently on the board
 - all meeple placements on those tiles. 
@@ -40,74 +47,92 @@ The environment implementation generates a state consisting of the current tile 
 We use the state for our state-space model, but describe it mathematically below.
 
 *_Note:  
-Due to the game implementation, there are a few changes &  
-limitations  that differ from the original game [1]  
-(includes: board size limited to 30x30, no starting tile, first tile placed by first player)_
+Due to the game implementation, there are a few changes & limitations that differ from the original game [1]   
+This includes: board size limited to 30x30, no starting tile, first tile placed by first player_
+
 
 ---
-### Game Setup
+### Base Game
 - Players $\mathbb P_0,\mathbb P_1$, each with a supply of 7 meeples
-- A set of 72 landscape tiles $\mathcal{T}$
-- An empty 30x30* board $B$
+- A set $\mathcal{T}$ of 72 landscape tiles (non-uniformally distributed across 24  
+tile types, but constant and consistent across runs of the base game)
+- An empty 30x30 board $B$ *
 
 
 ---
-### Tiles
+### Game Objects
+We define the following objects that make up a game state, and define them below:
+- Tiles
+- Deck (of tiles)
+- Board
+- Meeple
+
+
+---
+#### Tiles
 Each landscape tile $t\in\mathcal{T}$ is a square with:
-- four edges 
-    - `north, south, east, west` (represented as $n,s,e,w$ respectively)
+- Five positions, four of which are edges
     - $E=\{n, s, e, w\}$
-- five meeple positions
-    - the four edges and `center` (represented by $c$)
+        - Edges `north, south, east, west`  
+        (represented as $n,s,e,w$ respectively)
     - $P=E +\{c\}$
-- each position $p\in P$ displays a feature:
-    - "$p_f$" and "$f\in p$" will both denote feature $f$ on position $p$
+        - These four edges and position `center`  
+        (represented by $c$)
+    - Notation:
+        - $t^E, t^P$ denote the set of all edges and all positions of tile $t$ respectively
+            - note that $t^E\subset t^P$
+        - $t^e,t^p$ denote an edge $e\in t^E$ and position $p\in t^P$, respectively
+            - note that $e$ is a special type of position $p$
+
+        - Two positions $p,p'$ are 'connected' if:
+            - $p,p'$ are adjacent within a tile  
+                - For any two $p,p'\in t^P, p≠p'$, if  
+                  set $\{p,p'\} ≠ \{n,s\}$ and $\{p,p'\} ≠ \{e,w\}$,  
+                  then $p,p'$ are connected.  
+                - these pairs of positions $p\in t^P$ are connected:  
+                  $(n,e),(n,w),(s,e),(s,w),(n,c),(s,c),(e,c),(w,c)$  
+            - $p,p'$ are adjacent along the shared edge of two adjacent tiles $t,t'$
+                - $\exists$ edges $p\in t^E,p'\in t'^E$ st. $p,p'$ are adjacent
+
+- Each position $p\in P$ displays a feature of type $f$ (denoted as $p_f$):
+    - Every position has a feature.
     - Edge feature types include: 
-        - `{grass, city, road}`  
-        - enumerated as $f_1,f_2,f_3$
-        - ie. $\forall p\in E,$ p contains a feature from $\{f_1,f_2,f_3\}$ 
+        - `{fields, city, road}` enumerated as $f_1,f_2,f_3$
+        - $\forall p\in E,$ all edge positions $p$ contains a feature from set $\mathcal{F}_E = \{f_1,f_2,f_3\}$ 
+        - All edges have a feature from the set $\mathcal{F}_E = \{f_1,f_2,f_3\}$
+        - these features are expanded by placing an adjacent tile with the matching feature on the shared edge. 
+    
     - Other feature types include:
-        - `{village, monastery}`
-        - enumerated as $f_4,f_5$
-        - ie. $\forall p\in P,$ p contains a feature from $\{f_4,f_5\}$ 
-    - in other words:
-        - Let $\mathcal{F}_x$ denote the features available to $x$
-        - $\mathcal{F}_E \in \{f_1,f_2,f_3\}$
-        - $\mathcal{F}_P \in \mathcal{F}_E+\{f_4,f_5\}$
+        - `{village, monastery}` enumerated as $f_4,f_5$
+        - these features ($f_4,f_5$) may only exist in $c$ positions of a tile, and mark the starts/ends of features like roads.
+        - $\forall p\in P,$ all positions $p$ contain a feature from set $\mathcal{F}_P=\mathcal{F}_E+\{f_4,f_5\}$ 
+        
+- Features are created and expanded by placing tiles that connect positions of shared feature types.
+    - A feature $F=\{p_1,p_2,...,p_n\}$ is a run of connected positions that all share the same feature type.  
+    ie. $\forall p,p'\in F, p_f=p_f'=f$.
 
-For each tile $t$, let:
-- $t_E$ denotes the edges of tile $t$
-- $t_P$ denotes the positions of tile $t$
-- $t_e$ denotes $e\in t_E$
-- $t_p$ denotes $p\in t_P$
-- $t_{p,f}$ denotes feature $f$ on $t_p$
+- Each tile may be rotated for placement.
+    - Let $rotate(t,\theta)$ be a function that rotates $t$ by $\theta\in\{0º, 90º, 180º, 270º\}$  
 
 
-In the base game, there are 24 unique tile types.  
-Tile types are constant, consistent, and non-uniformly distributed amongst the 72 tiles.
-
-<!-- Tile placement on the board is constrained:
-- all adjacent edges must have matching features
--  -->
-
-Each tile, when drawn, may be rotated.
-
+---
+#### Deck
 Let $D$ be a queue of undrawn tiles  
 $D$ will be referred to as the 'pile' or 'deck'.  
 $D$ has methods:
-- $push()$: to enqueu a tile 
-- $pop()$: to dequeue a tile
-- $top()$: to view top of stack
-
+- $push()$: to enqueue a tile 
+- $pop()$: to dequeue a tile 
+- $next()$: to view next tile in queue (aka the 'top' of the deck) 
 $\forall t\in\mathcal{T}$ are pushed onto $D$ in a random order.  
 $t\in D=\{t_1,t_2,...,t_{72}\}$ where $t_s$ is the tile drawn at step $s$.  
 
 
 ---
-### Board State
+#### Board
 Let $B$ represent the Board:
-- $B$ is a 30x30 matrix
-- Let $i,j$ be indices such that $\forall i,j: 1 ≤ i,j ≤ 30$ *  
+- $B$ is a 30x30 matrix *
+- Let $i,j$ be indices such that $\forall i,j: 1 ≤ i,j ≤ 30$
+- $b_{i,j}$ represents the position on $B$ at coordinates $(i,j)$
 - For each $b_{i,j}\in B$:
 $$
 b_{i,j} = 
@@ -116,7 +141,7 @@ b_{i,j} =
     t_{s} & \text{if tile $t_s$ at position }(i,j) \\
 \end{cases}
 $$  
-ie. Board B is:
+- ie. Board $B$ is:
 $$
 B=
 \begin{bmatrix}
@@ -127,244 +152,177 @@ B=
 \end{bmatrix}
 $$
 Let $tiles(B)$ return the set of tiles currently in $B$  
-Let $meeples(B)$ return the set of meeples currently in $B$  
 Let $|B|$ return the number of tiles currently in $B$
 
----
-Meeples are a point-generating mechanism in Carcassonne. After a tile is placed, the player has the option to also place a meeple, as long as it is the first and only meeple on that feature.
-
-Each player has 7 meeples that they may place at any step during the game. We can think of this as a set of meeples $M$ where $0≤|M|≤7$.
-
 
 ---
-### Time/Steps
-At each step $s$, where $1 ≤ s ≤ 72$  
-(where s=0 represents the initial board state before the first action).  
+#### Meeple
+Meeples provide a point-multiplying mechanism in Carcassonne.  
+After a tile is placed, the player has the option to also place  
+a meeple on a feature of that tile, as long as it is the first  
+and only meeple of that feature.  
+(eg. if the current tile is placed to extend a road that already  
+has a meeple, a new meeply may not be placed.)
 
-- Let $\mathbb P'$ denote the current player (player whose turn it is on step $s$)
-    - $\mathbb P' = \mathbb P_{s\mod 2}$ in a two player game
-    <!-- - $\mathbb P' = \mathbb P_{(s+1)\mod 2}$ in a two player game -->
+Each player has 7 meeples that they may place at any step during the game.  
+We can think of this as a set of meeples $M$ where $0≤|M|≤7$.  
+A player $\mathbb P$'s meeple set is denoted as $\mathbb P_M$.
 
-- Let $B_s$ be the board state at step s 
+Because a player can only place a meeple $m$ on a tile when that tile is placed on the board,  
+we associate a placed meeple with the tile and feature it was placed on.  
+That is, each meeple $m_{t_s,p}\in M$ denotes the meeple $m$ placed on tile $t_s$ in position  
+$p\in t_{p}$ at time step $s$. An unplaced meeple is denoted as $m\in M$.
+
+- Let $meeples(t)$ return 
+    - None if there is no meeple on $t$
+    - Otherwise, the meeple and its position $p\in t^p$
+- Let $meeples(B)$ return the set of meeples currently in $B$  
+    - ie. for each tile in $B$ with meeples, return the set of meeples placed on board $B$
+
+
+---
+### State Space ($\mathbb X$)
+#### Game States
+Let $\mathbb X$ be the state space of the Carcassonne base game.  
+At each step $s$, where $1 ≤ s ≤ 72$:  
+We define the current game state $x_s\in\mathbb X$ as an aggregate of the object states $x_s = [\mathbb P',B_s, D_s]$, where:
+
+- $\mathbb P'$ denotes the current player (player whose turn it is on step $s$)
+    - $\mathbb P' = \mathbb P_{(s-1)\mod 2}$ in a two player game
+    - $\mathbb P_M'$ denotes that player's set of unplaced meeples
+    - ie.
+$$
+    s=1: \mathbb P' =\mathbb P_0 \\ 
+    s=2: \mathbb P' =\mathbb P_1 \\ 
+    s=3: \mathbb P' =\mathbb P_0 \\ 
+    ...\\
+    s=72: \mathbb P' =\mathbb P_1 \\
+$$
+- $B_s$ is the board state at step s 
     - ie. $tiles(B_s)=\{t_1,...,t_{s-1}\}$
-- Let $D_s$ be the remaining undrawn tiles
+- $D_s$ is the remaining undrawn tiles
     - ie. $D_s = D-tiles(B_s)$
     - $\therefore D_s = [t_{s},...,t_{72}]$
-- Let $t_s$ be the next tile drawn
-    - ie. $t_s=D.top()$
-<!-- - Let $t_s$ be the tile drawn next from $D$ at step $s$ -->
+    - Let $t_s$ be the next tile drawn from $D_s$
+        - ie. $t_s=D_s.next()$  
+_*Note: because $t_s$ is implicitly defined in $D_s$, its not included separately in the game state,  
+        though it will be referred to here as the 'current' or 'active' tile_
+        - Only $t_s$ is observable in $D_s$  
 
-Let $X$ be the set of all possible game states.  
-State $x\in X$ at step $s$ is defined as $x_s = [B_s,D_s,t_s]$ <!-- M_s]$ to model meeples? -->
 
 ---
 #### Initial State (ie. $s=1$):
-$x_1$:
-<!-- - $P_0=D \implies t_0 =$  -->
+$x_1$: the following assignments are made:
+- $\mathbb P'=\mathbb P_0$ 
 - $D_1=D$ 
-- $B_1$ is an empty board; ie. 
+- $B_1$ is an empty board;   
+$\forall b_{i,j}\in B_1, b_{i,j}=0$, so: 
 $$
+\begin{matrix}
 B_1=
 \begin{bmatrix}
     0 & 0 & 0 & \dots  & 0 \\
     0 & 0 & 0 & \dots  & 0 \\
     \vdots & \vdots & \vdots & \ddots & \vdots \\
     0 & 0 & 0 & \dots  & 0 \\
-\end{bmatrix},\ \ 
-tiles(B_1)=\{\}
+\end{bmatrix} \\
+\\ 
+\begin{matrix}
+ie. & tiles(B_1)=\{\} \\ 
+\therefore & meeples(B_1)=\{\}
+\end{matrix}
+\end{matrix}
 $$
+$\therefore x_1 = [\mathbb P'=\mathbb P_0, B_1,D_1=D]$
 
 
-ie. $x_1 = [B_1,D, t_1]$
-<!-- ie. $x_0 = [D, B_0, t_0]$ -->
-  
+---
+### Action space ($\mathcal A$)
+The action space $\mathcal A$ is defined as the set of all possible tile and meeple placements  
+for $t_s,B_s\in x_s$ that produces a legal $B_{s+1}\in x_{s+1}$  
+(ie. producing a valid transition from $x_s \to x_{s+1}$).
+
+At game state $x_s=[\mathbb P',B_s, D_s]$, player $\mathbb P'$ chooses an action $a_s\in\mathcal{A}$.
+
+First, the player selects a board location and rotation for current tile $t_s$ to place the tile.   
+Second, the player chooses whether or not to place a meeple on a feature of the tile they just placed;  
+meeple placement is valid as long as the feature doesn't already contain another meeple.
+
+Actions $a_s\in\mathcal A$ are defined as tuples:
+$$
+\begin{array}{l}
+    a_s = ((b_{i,j},\theta),p), \text{ where:} \\
+    \begin{array}{l}
+        \text{position }b_{i,j}\in B_s\land b_{i,j}=0, \\
+        \text{rotation } \theta \text{ is selected st. }is\_valid\_placement(B_s, b_{i,j}=rotate(t_s,\theta))\text{ returns True}, \\
+        \text{and position } p\in t_s \text{ is selected st. }is\_valid\_meeple(B_s, b_{i,j}, p) \\
+    \end{array}
+\end{array}
+$$
+The two helper functions, $is\_valid\_placement()$ and $is\_valid\_meeple()$ are defined below.
+
+
 ---
 #### Helper Functions
-For board $B$, 
-drawn tile $t$,  
-tile rotation $\theta\in\{0º, 90º, 180º, 270º\}$  
-and position (x,y) where $b_{x,y}\in B$ and $b_{x,y}=0$
+Adjacent tiles must share the same feature type on adjacent edges.  
 
-Let function $is\_valid\_placement(B,t,\theta,(x,y))$ return true if:
-- tile $t$ rotated by $\theta$ and placed at $b_{x,y}\in B$
-- $\forall$ tiles $b'\in J=\{b_{x+1,y},b_{x-1,y},b_{x,y+1},b_{x,y-1} | b_{i,j} ≠ 0\}$ (adjacent board positions containing tiles)
-    - $matching\_features(b',b_{x,y})$ is True
-- adjacent to $b_{x,y}$, the adjacent edges have the same feature type
-    <!-- - if $\forall e\in t_E$, and $\forall e'\in j, \forall j \in J$ where $J$ is the set of tiles  -->
+For board $B_s$, board position $b_{i,j}$, and tile $t_s$ rotated by $\theta$ to be assigned to $b_{i,j}$,  
+(ie. $b_{i,j} = t_s = rotate(t_s,\theta)$)
 
+Let function $is\_valid\_placement(B,b_{i,j})$ return true if all adjacent tile edges share the same feature $f$:
 
-For $b_1,b_2\in B$,  
-Let function $matching\_features(b_1,b_2)$ return true if:
-- $\exists$ edge $e\in b_1\land e\in b_2$ (adjacent edge)
-- $\exists$ tiles $t_p$ on $b_1\land t_q$ on $b_2$ (there are tiles $t_p$ and $t_q$ on positions $b_1$ and $b_2$)
-- and $t_p.e.f = t_q.e.f$ ($t_p$'s feature matches $t_q$'s feature on that edge)
+- For each board positions with tiles $b'\in B$ (where $b'$ is assigned tile $t'$),  
+and $b'$ is adjacent to $b_{i,j}$ (ie. all $b'\in\{b_{i+1,j}, b_{i-1,j}, b_{i,j+1}, b_{i,j-1}\}$),  
+- Let edges $e\in t_s$ and $e'\in t'$ refer to the adjacent edge of tiles $t$ and $t'$ (ie. $e=e'$)  
+- If $\exists\ b'\text{ st. } e_f≠e_f'$, return $False$.  
+- Otherwise return $True$.
 
+Let function $features\_with\_meeple(B,t_s)$ return the set of all  
+features on, and extended by, tile $t_s$ that currently have a meeple.  
+
+Let function $is\_valid\_meeple(B,t_s,p)$ return true if  
+$p_f \cup features\_with\_meeple(B,t_s)=\empty$.  
+
+(ie. the feature $f$ at position $p\in t^p_s$ does not extend a feature that currently has a meeple)
 
 ---
-# 
-At step $s$, let `legal_board_placements(B_s,t_s)` be a function that returns all valid board positions $b_{ij}\in B_s$ and rotations $\theta\in\{0º, 90º, 180º, 270º\}$ on $t_s$ such that assigning $b_{i,j}=rotated(t_s,\theta)$ results in a valid board $B_{s+1}$
-
-At step $s$, let `legal_meeple_placements(B_s,t_s)`be a function that returns
+<!-- ###### Version 2 of legal_meeple_placements function definition
+Let function $legal\_meeple\_placements(B_s,t_s)$ be a function that returns all legal meeple placements $m_s$:
 $$
-p = 
+m_s = 
 \begin{cases}
 None \\
-\text{all valid tile positions $p\in t_s$ on which assigning $p=m_s$ results in a valid board $B_{s+1}$}
+\text{all valid positions $p\in t^p_s$ where assigning $p=m_s$}\\
+\text{ won't conflict with $m_i$ ($1 ≤ i ≤ s-1)$}
 \end{cases}
+$$ -->
+
+---
+
+---
+<!-- ##### (old version - only get legal actions, rather than check for validity) 
+Let $legal\_board\_placements(B_s,t_s)$ be a function that returns all valid board positions $b_{ij}\in B_s$ and rotations $\theta\in\{0º, 90º, 180º, 270º\}$ on $t_s$ such that assigning $b_{i,j}=rotate(t_s,\theta)$ results in a valid board $B_{s+1}$
+
+Let $legal\_meeple\_placements(B_s,t_s)$ be a function that returns all legal meeple placements $m_s$:
 $$
-
-
----
-### Action Space
-The action space $\mathcal A$ is defined as every legal combination of tile placements and meeple placements in a player's turn.
-
-Action $a\in\mathcal A$ is a tuple:
-$$
-a = ((b_{i,j},\theta_s),p),\text{ where } b_{i,j}\in B, \theta_s\in\theta, p\in t_s
-$$
-where $i,j$ is the position on $B$
-
-For each step (ie. $\forall s,\ 0 < s ≤ 72$):
-$x_s$:  
-- $t_s \leftarrow P_{s-1}.pop()$  (ie. Player draws random tile from top of pile)
-- $\theta = rotate(t_s)$
-- $P_s = P_{s-1} - \{t_s\} =\{t_{s+1},...,t_{72}\}$ (ie. Set of remaining tiles in pile)
-
-
-<!-- Agent takes action $a_s$ which includes information for the two move phases   -->
-Let $\mathbb P' = \mathbb P_{s\mod2}$ (ie. $\mathbb P'$ denotes the current player)  
-$\mathbb P'$ takes action $a_s$ in two phases:
-<!-- (tile placement, meeple placement): -->
-- Phase 1:
-    - A' places tile $t_s$ in a legal position on $B$
-    
-
-- coordinates $i,j$, and orientation $\theta$ to place tile $t_s$ (ie. to set $b_{ij}=t_s$)
-- coordinates i,j and to place tile $t_s$ (ie. to set $b_{ij}=t_s$):  
-Policy $\pi(x_s,a_s)$:
-- Phase 1:
-    - The current board $B_s=\{t_1,t_2,...,t_s\}$
-    - Player will place tile $t_s\rightarrow B_{s-1}$ at some $b_{ij}$ (per policy $\pi$)
-
-
-When drawn, the tile may be rotated by $\theta\in\{0º,90º,180º,270º\}$, then placed on the board $B$ at some selected $(i,j)$
+m_s = 
+\begin{cases}
+None \\
+\text{all valid tile positions $p\in t^p_s$ on which assigning $p=m_s$ results in a valid board $B_{s+1}$}
+\end{cases}
+$$ -->
 
 ---
 
-
-Each edge must be placed adjacent to an edge on the board such that
- adjacent edges share the same feature
- contains a feature type.  
-We will enumerate the four edges as relative north, south, east, and west.  
-ie. Tile $t$'s edges can be represented as an enumeration:
-<!-- todo: enumerate feature types, so can define Pr[e = f and e=e' | x_{s-1}] or smth? -->
-
----
----
----
----
-
-
-
-### Branching Factor
-Considering meeples further increase branching factor; Each action may optional include the usage of a meeple
-
-
-
-
-<!-- # version 1
-At state $s$, each tile $t_s$ is defined as a square matrix:
-$$
-t_s = 
-\left[
-\begin{matrix}
-   e_{w} & e_{n} \cr
-   e_{s} & e_{e} \cr
-\end{matrix}
-\right]
-=
-\left[
-\begin{matrix}
-   e_{00} & e_{01} \cr
-   e_{10} & e_{11} \cr
-\end{matrix}
-\right]
-$$
-where $w=west, n=north, s=south, e=east$.  
-$t_{s}=e_{ij}$  -->
-
-
-
-
-
-<!-- #### Version 0
-State Space Size
-This is very difficult to compute the number of board configurations precisely due to a number of factors, but especially the variety of board shapes and placement restrictions, which results in a massive discrete state space.   
-
-- After the starting tile $t_0$, each tile $t_s$ is drawn randomly from a non-uniformly distributed set $T=\{t_1,t_2,...,t_{71}\}$. 
-- Tile placement is constrainted since each placed tile must "continue the landscape", which is dependent on:
-    - the current board's shape
-    - its current open sides/features
-    - the current tile to be placed
-- Meeple placement is dependent on:
-    - the current placed tile
-    - previous meeple placements
-
-
-According to this [thesis](https://project.dke.maastrichtuniversity.nl/games/files/msc/MasterThesisCarcassonne.pdf), a lower bound on the state space can be calculated based on unique board shapes (called polyominoes), at $\approx 3\cdot10^{41}$
-
-
-We compute board shapes for each tile on the board, where $1 ≤ s ≤ |T|=72$.  
-We consider mirrored or rotated polyominoes to be the same board state
-
-
-
-To compute the number of board shapes at each step of play:  
-
-0. $x_0$: Board starts with $t_0$ (aka $t_s$)  
-    - 1 tile placed
-    - 1 possible shape
-    - 4 open edges
-
-1. $x_1$: Tile $t_1$ is placed from remaining 71 tiles in $T$
-    - 2 tiles placed
-    - result is 1 possible shape
-    - 6 open edges
-
-2. $x_2$: Tile $t_2$ is placed from remaining 70 tiles in $T$
-    - 3 tiles placed
-    - result is 2 possible shapes (a line or corner)
-    - 8 open edges
-
-From here, shapes begin to get complicated.  
-3. $x_3$: Tile $t_3$ is placed from remaining 69 tiles in $T$
-    - 4 tiles placed
-    - results in several possible shapes:  
-        - if $s_2=Corner$, 7 possible $s_3$ shapes  
-        - if $s_2=Line$, 8 possible $s_3$ shapes  
-...  
-
-70. Tile is placed from remaining 2 tiles
-    - 71 tiles placed
-71. Tile is placed from remaining 1 tile  
-    - 72 tiles placed
-
---- -->
-
-
-A Lower limit can be computed by estimating the number of board shapes:
-
-
-
----
 
 
 ### Milestone 2: 
-#### Per Proposal:
-- Complete the implementation of the model and training
-- test-run the training, make sure it works.
-
 #### State Space Implementation:
+The state space was implemented in the original project, which provided methods for accessing the game state, retrieving legal actions, and applying those actions.
+
+As such, our focus was on implementing agents.
+
+Our original goal was to implement an agent to utilize the Monte Carlo Tree Search.
 
 
 
@@ -372,12 +330,12 @@ A Lower limit can be computed by estimating the number of board shapes:
 
 ---
 ## Sources:
-Carcassonne Implementation
-[1] https://wingedsheep.com/programming-carcassonne/
+Carcassonne Implementation:
+- [1] (https://wingedsheep.com/programming-carcassonne/)
 
-polyominoes
-[2] https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html
-[3] https://epubs.siam.org/doi/10.1137/1.9781611977929.10
+Polyominoes:
+- [2] (https://www.math.cmu.edu/~bkell/21110-2010s/polyominoes.html)
+- [3] (https://epubs.siam.org/doi/10.1137/1.9781611977929.10)
 
-Markov Modeling  
-[4] https://ml-lectures.org/docs/reinforcement_learning/ml_reinforcement-learning-2.html
+Markov Modeling:
+- [4] (https://ml-lectures.org/docs/reinforcement_learning/ml_reinforcement-learning-2.html)
