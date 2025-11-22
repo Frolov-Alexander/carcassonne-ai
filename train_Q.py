@@ -1,13 +1,20 @@
-#Author: Anvay Paralikar Q_Learning agent implementation
+# Author: Anvay Paralikar – Q-learning agent training script
+
+from __future__ import annotations
 
 from wingedsheep.carcassonne.carcassonne_game import CarcassonneGame
 from wingedsheep.carcassonne.tile_sets.tile_sets import TileSet
 
-from agents.agent import QLearnAgent, RandAgent
+from agents import QLearnAgent, RandAgent
 
 
 def run_episode(q_agent: QLearnAgent, epsilon: float, render: bool = False):
-    # New Carcassonne game for this episode
+    """
+    Run a single self-contained episode:
+    - new CarcassonneGame
+    - q_agent vs random agent
+    - returns final scores [q_score, rand_score]
+    """
     game = CarcassonneGame(
         players=2,
         tile_sets=[TileSet.BASE],
@@ -17,7 +24,7 @@ def run_episode(q_agent: QLearnAgent, epsilon: float, render: bool = False):
     opp_agent = RandAgent(1)
     players = [q_agent, opp_agent]
 
-    # reset per-episode memory but KEEP learned Q-table
+    # Reset only per-episode memory, keep learned Q-table
     q_agent.reset_episode()
     q_agent.epsilon = epsilon
 
@@ -34,8 +41,8 @@ def run_episode(q_agent: QLearnAgent, epsilon: float, render: bool = False):
     return game.state.scores  # [score_Q, score_rand]
 
 
-def main():
-    num_episodes = 20  # start small so it's quick
+def main() -> None:
+    num_episodes = 20  # adjust for your experiments
 
     q_agent = QLearnAgent(
         index=0,
@@ -61,8 +68,8 @@ def main():
             result = "Draw"
 
         print(f"Episode {ep:3d}: scores = {scores} -> {result}")
-    
-    q_agent.save_q_table("q_table.pkl")
+
+    # save learned Q-table at the end
     q_agent.save_q_table("q_table.pkl")
     print("Saved trained Q-table to q_table.pkl")
 
