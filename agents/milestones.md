@@ -5,10 +5,10 @@
 - Alex Frolov
 - Ari Majumdar
 
-### [Link to Proposal](https://docs.google.com/document/d/1PEDPkamepkVnma3u2gy3hDgGm40ObsuCCUwDg2AMZo8/edit?usp=sharing)
+### [Link to Proposal (Google Docs)](https://docs.google.com/document/d/1PEDPkamepkVnma3u2gy3hDgGm40ObsuCCUwDg2AMZo8/edit?usp=sharing)
 
 ### Project Setup/Run:
-- Setup instructions in README.md at root level
+- Setup instructions in [README.md](../README.md) (at root level)
 
 
 ---
