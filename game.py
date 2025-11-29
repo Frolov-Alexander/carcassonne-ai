@@ -27,7 +27,6 @@ def main() -> None:
     players: list[Agent] = [
         RandAgent(0),
         QLearnAgent(1)
-       
     ]
 
     # --- main game loop ---
