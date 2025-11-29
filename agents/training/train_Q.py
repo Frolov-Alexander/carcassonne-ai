@@ -7,15 +7,6 @@ from wingedsheep.carcassonne.tile_sets.tile_sets import TileSet
 from agents import QLearnAgent, RandAgent
 
 
-AGENT_ID = 0
-TRAINING_ITERATIONS = 20
-
-EPISODES = 'episodes'
-WINS = 'wins'
-LOSSES = 'losses'
-DRAWS = 'draws'
-
-
 def run_episode(q_agent: QLearnAgent, epsilon: float, render: bool = False):
     """
     Run a single self-contained episode:
