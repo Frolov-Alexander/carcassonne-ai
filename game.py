@@ -8,10 +8,31 @@ from wingedsheep.carcassonne.tile_sets.supplementary_rules import SupplementaryR
 
 from agents import Agent, RandAgent, QLearnAgent
 from agents.mcts_agent import MCTSAgent
-
 from menu import CarcassonneMenu
 
 import time
+
+
+def drawScoreboard(game, players):
+    canvas = game.visualiser.canvas
+    canvas.create_rectangle(25, 25, 325, 125 + len(players) * 40, fill="white", outline="black", width=3)
+
+    currentPlayIndex = game.get_current_player()
+    currentPlayType = players[currentPlayIndex].type
+
+    canvas.create_text(50, 50, anchor="w", text=f"Current turn: Player {currentPlayIndex + 1}", fill="black", font=("Arial", 30, "bold"))
+    canvas.create_text(50, 80, anchor="w", text=f"Agent: {currentPlayType}", fill="black", font=("Arial", 30, "bold"))
+    canvas.create_text(50, 110, anchor="w", text="Scores:", font=("Arial", 25, "bold"))
+
+    startY = 140
+    for i, score in enumerate(game.state.scores):
+        agentType = players[i].type
+        # highlight current player with special color
+        if i == currentPlayIndex:
+            canvas.create_text(50, startY + 25 * i, anchor="w", text=f"Player {i + 1} ({agentType}): {score}", font=("Arial", 20), fill = "green")
+        else:
+            canvas.create_text(50, startY + 25 * i, anchor="w", text=f"Player {i + 1} ({agentType}): {score}", font=("Arial", 20), fill="black")
+
 
 def sort_agents(input, index):
     '''elif input == "Sarsa":
@@ -76,17 +97,20 @@ def main() -> None:
 
         game.render()
 
+        # check if scoreboard is allowed, and if so draw it
+        if scoreboard:
+            drawScoreboard(game, agentClasses)
+        game.visualiser.canvas.update()
+
         player_id: int = game.get_current_player()
         agent: Agent = agentClasses[player_id]
 
-        action: Optional[Action] = agent.choice(game)
-        if action is not None:
-            game.step(player_id, action)
-
         game.render()
-
+        if scoreboard:
+            drawScoreboard(game, agentClasses)
+        game.visualiser.canvas.update()
     print("Game finished. Final scores:", game.state.scores)
 
-
+    
 if __name__ == "__main__":
     main()
